@@ -106,9 +106,7 @@ app.post('/api/drive', async (req, res) => {
 app.post('/api/drive/:driveId', async (req, res) => {
     const { driveId } = req.params;
     const relativePath = path.join(rootPath, driveId);
-    console.log(relativePath)
     const { name } = req.query;
-    console.log(name);
     const regex = /[a-zA-Z0-9]/;
     fs.stat(relativePath, (err, stats) => {
         if (err) {
@@ -127,9 +125,54 @@ app.post('/api/drive/:driveId', async (req, res) => {
             await fs.promises.mkdir(folderPath, { recursive: true });
             return res.sendStatus(201);
         } catch (e) {
-            return res.status(500).send(`Cannot create the folder ${name} : ${e}`);
+            console.log(`Cannot create the folder ${name} : ${e}`)
+            return res.status(500).send();
         }
     } else {
-        return res.status(400).send(`${name} can't be created : wrong format.`);
+        console.log(`${name} can't be created : wrong format.`)
+        return res.status(400).send();
     }
+});
+
+app.delete('/api/drive/:driveId', async (req, res) => {
+    const { driveId } = req.params;
+    const regex = /[a-zA-Z0-9]/;
+    if (regex.test(driveId)){
+        try{
+            const relativePath = path.join(rootPath, driveId);
+            await fs.promises.rm(relativePath, { recursive: true });
+            console.log(`${driveId} has been removed.`)
+            return res.sendStatus(200);
+        } catch (e) {
+            console.log(`Cannot remove the folder ${driveId} : ${e}`)
+            return res.status(500)
+        }
+    } else {
+        console.log(`${driveId} can't be removed : wrong format.`);
+        return res.status(400);
+    }
+});
+
+app.delete('/api/drive/:driveId', async (req, res) => {
+    const { driveId } = req.params;
+    const regex = /[a-zA-Z0-9]/;
+    const { name } = req.query;
+    if (regex.test(driveId)){
+        const relativePath = path.join(rootPath, driveId);
+        if (regex.test(name)){
+            try{
+                const folderPath = path.join(relativePath, name);
+                await fs.promises.rm(relativePath, { recursive: true });
+                console.log(`${name} has been removed.`)
+                res.status(200);
+            } catch (e) {
+                console.log(`500 : ${name} can't be removed : ${e}`);
+                return res.status(500)
+            }
+        } else {
+            console.log(`${driveId} can't be removed : wrong format.`);
+            return res.status(400)
+        }
+    }
+
 });
