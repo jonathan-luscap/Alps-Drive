@@ -1,6 +1,12 @@
 const express = require('express');
 const app = express();
 
+const bb = require('express-busboy');
+bb.extend(app, {
+    upload: true,
+    allowedPath: /^\/api\/drive/
+});
+
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -162,7 +168,7 @@ app.delete('/api/drive/:driveId', async (req, res) => {
         if (regex.test(name)){
             try{
                 const folderPath = path.join(relativePath, name);
-                await fs.promises.rm(relativePath, { recursive: true });
+                await fs.promises.rm(folderPath, { recursive: true });
                 console.log(`${name} has been removed.`)
                 res.status(200);
             } catch (e) {
@@ -175,4 +181,45 @@ app.delete('/api/drive/:driveId', async (req, res) => {
         }
     }
 
+});
+
+app.put('/api/drive', async (req, res) => {
+    const file = req.files.file;
+    if (typeof file !== 'undefined'){
+        const filePath = path.join(rootPath, file.filename);
+        try {
+            await fs.rename(file.file, filePath, (err) => {
+                if (err) throw err;
+            })
+            return res.sendStatus(201)
+        } catch (e) {
+            console.log(e)
+            return res.sendStatus(500);
+        }
+    } else {
+        return res.sendStatus(400);
+    }
+});
+
+app.put('/api/drive/:driveId', async (req, res) => {
+    const { driveId } = req.params;
+    const file = req.files.file;
+    if (typeof driveId !== 'undefined') {
+        if (typeof file !== 'undefined'){
+            const filePath = path.join(rootPath, driveId, file.filename);
+            try {
+                await fs.rename(file.file, filePath, (err) => {
+                    if (err) throw err;
+                })
+                return res.sendStatus(201)
+            } catch (e) {
+                console.log(e)
+                return res.sendStatus(500);
+            }
+        } else {
+            return res.sendStatus(400);
+        }
+    } else {
+        return res.sendStatus(404);
+    }
 });
