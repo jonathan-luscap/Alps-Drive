@@ -5,7 +5,7 @@ function createTempPath(path) {// crée le fichier temporaire racine
         fs.mkdir(path, err => {
             if (err) throw err;
         });
-        console.log(`Rootpath exists : ${path}`);
+        console.log(`Creation of Rootpath : ${path}`);
         return true;
     } catch (e) {
         console.error('Error while creating the folder rootpath in temp directory : ', e);
